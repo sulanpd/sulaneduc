@@ -5,6 +5,7 @@
   <title>ChatBot Moderno</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
+  <!-- Lucide icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
@@ -15,9 +16,21 @@
       <button class="close-sidebar" id="closeSidebar" title="Fechar painel">&times;</button>
     </div>
     <ul class="sidebar-menu">
-      <li><button class="tool-btn" title="Ferramentas"><i data-lucide="settings"></i> Ferramentas</button></li>
-      <li><button class="tool-btn" title="Enviar Arquivo"><i data-lucide="paperclip"></i> Enviar Arquivo</button></li>
-      <li><button class="tool-btn" title="Enviar Áudio"><i data-lucide="mic"></i> Enviar Áudio</button></li>
+      <li>
+        <button class="tool-btn" title="Ferramentas">
+          <i data-lucide="settings"></i> Ferramentas
+        </button>
+      </li>
+      <li>
+        <button class="tool-btn" title="Enviar Arquivo" id="sidebarUploadBtn">
+          <i data-lucide="paperclip"></i> Enviar Arquivo
+        </button>
+      </li>
+      <li>
+        <button class="tool-btn" title="Enviar Áudio">
+          <i data-lucide="mic"></i> Enviar Áudio
+        </button>
+      </li>
     </ul>
   </aside>
 
@@ -60,12 +73,14 @@
         <div class="bubble">Olá! Como posso ajudar você hoje?</div>
       </div>
     </div>
-    <form class="chat-input-area">
+    <form class="chat-input-area" id="chatForm" autocomplete="off">
       <button type="button" class="icon-btn" title="Enviar Áudio"><i data-lucide="mic"></i></button>
-      <button type="button" class="icon-btn" title="Enviar Arquivo"><i data-lucide="paperclip"></i></button>
-      <input type="text" placeholder="Digite sua mensagem..." required>
+      <button type="button" class="icon-btn" title="Enviar Arquivo" id="chatUploadBtn"><i data-lucide="paperclip"></i></button>
+      <input type="text" placeholder="Digite sua mensagem..." id="msgInput" required autocomplete="off">
       <button type="submit" class="send-btn" title="Enviar"><i data-lucide="send"></i></button>
     </form>
+    <!-- Input file escondido -->
+    <input type="file" id="fileInput" style="display:none">
   </div>
   <script>
     // Lucide icons
@@ -84,7 +99,7 @@
       if (event.target == loginModal) loginModal.classList.remove('show');
     }
 
-    // Switch between Login and Register
+    // Switch Login/Register
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const showLogin = document.getElementById('showLogin');
@@ -101,6 +116,108 @@
       showLogin.classList.remove('active');
       loginForm.classList.add('hidden');
       registerForm.classList.remove('hidden');
+    };
+
+    // Sistema de cadastro
+    registerForm.onsubmit = function(e) {
+      e.preventDefault();
+      const usuario = this[0].value.trim();
+      const email = this[1].value.trim();
+      const senha = this[2].value;
+      const confirmar = this[3].value;
+      if (senha !== confirmar) {
+        alert('As senhas não coincidem!');
+        return;
+      }
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.find(u => u.usuario === usuario)) {
+        alert('Usuário já cadastrado!');
+        return;
+      }
+      users.push({ usuario, email, senha });
+      localStorage.setItem('users', JSON.stringify(users));
+      alert('Conta criada com sucesso!');
+      showLogin.click();
+    };
+
+    // Sistema de login
+    loginForm.onsubmit = function(e) {
+      e.preventDefault();
+      const usuario = this[0].value.trim();
+      const senha = this[1].value;
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.usuario === usuario && u.senha === senha);
+      if (user) {
+        alert('Login efetuado com sucesso!');
+        localStorage.setItem('loggedUser', usuario);
+        document.getElementById('loginModal').classList.remove('show');
+        updateLoginBtn();
+      } else {
+        alert('Usuário ou senha inválidos!');
+      }
+    };
+
+    // Mostrar usuário logado ou botão de login
+    function updateLoginBtn() {
+      const loggedUser = localStorage.getItem('loggedUser');
+      const loginBtn = document.querySelector('.login-btn');
+      if (loggedUser) {
+        loginBtn.innerHTML = `<i data-lucide="user"></i> ${loggedUser} (Sair)`;
+        loginBtn.onclick = function(){
+          localStorage.removeItem('loggedUser');
+          window.location.reload();
+        };
+      } else {
+        loginBtn.innerHTML = `<i data-lucide="user"></i> Login`;
+        loginBtn.onclick = () => loginModal.classList.add('show');
+      }
+      lucide.createIcons();
+    }
+    updateLoginBtn();
+
+    // Upload de arquivo (chat e sidebar)
+    function setupFileUpload(btnId) {
+      document.getElementById(btnId).onclick = function() {
+        document.getElementById('fileInput').click();
+      };
+    }
+    setupFileUpload('chatUploadBtn');
+    setupFileUpload('sidebarUploadBtn');
+
+    // Ao selecionar arquivo, mostra no chat uma mensagem de arquivo enviado (simulação)
+    document.getElementById('fileInput').onchange = function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        addMessage('user', `📎 <b>Arquivo enviado:</b> ${file.name}`);
+        this.value = ''; // Reseta para permitir upload de mesmo arquivo de novo
+      }
+    };
+
+    // Função para adicionar mensagem ao chat
+    function addMessage(type, content) {
+      const chatArea = document.getElementById('chatArea');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `chat-message ${type}`;
+      msgDiv.innerHTML = `
+        <span class="avatar">${type === 'user' ? '🧑' : '🤖'}</span>
+        <div class="bubble">${content}</div>
+      `;
+      chatArea.appendChild(msgDiv);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    // Envio de mensagem do usuário (chat)
+    document.getElementById('chatForm').onsubmit = function(e) {
+      e.preventDefault();
+      const input = document.getElementById('msgInput');
+      const msg = input.value.trim();
+      if (msg.length === 0) return;
+      addMessage('user', msg);
+      input.value = '';
+      // Simula resposta bot
+      setTimeout(() => {
+        addMessage('bot', 'Mensagem recebida!');
+      }, 500);
     };
   </script>
 </body>
