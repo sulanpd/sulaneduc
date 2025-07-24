@@ -5,11 +5,10 @@
   <title>ChatBot Moderno</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
-  <!-- Ícones Lucide CDN (para botões modernos) -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
-  <!-- Painel Lateral -->
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <span class="logo">🤖</span>
@@ -21,38 +20,46 @@
       <li><button class="tool-btn" title="Enviar Áudio"><i data-lucide="mic"></i> Enviar Áudio</button></li>
     </ul>
   </aside>
-  
-  <!-- Painel de Login (modal) -->
+
+  <!-- Modal Login/Register -->
   <div class="modal" id="loginModal">
     <div class="modal-content">
       <button class="close-modal" id="closeLogin">&times;</button>
-      <h2>Login</h2>
-      <form>
+      <div class="switch-auth">
+        <button id="showLogin" class="active">Login</button>
+        <button id="showRegister">Criar Conta</button>
+      </div>
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form">
+        <h2>Login</h2>
         <input type="text" placeholder="Usuário" required>
         <input type="password" placeholder="Senha" required>
         <button type="submit">Entrar</button>
+      </form>
+      <!-- Register Form -->
+      <form id="registerForm" class="auth-form hidden">
+        <h2>Criar Conta</h2>
+        <input type="text" placeholder="Usuário" required>
+        <input type="email" placeholder="E-mail" required>
+        <input type="password" placeholder="Senha" required>
+        <input type="password" placeholder="Confirmar Senha" required>
+        <button type="submit">Registrar</button>
       </form>
     </div>
   </div>
 
   <div class="main-container">
-    <!-- Cabeçalho -->
     <header>
       <button class="open-sidebar" id="openSidebar"><i data-lucide="menu"></i></button>
       <h1>ChatBot</h1>
       <button class="login-btn" id="openLogin"><i data-lucide="user"></i> Login</button>
     </header>
-    
-    <!-- Área do Chat -->
     <div class="chat-area" id="chatArea">
       <div class="chat-message bot">
         <span class="avatar">🤖</span>
         <div class="bubble">Olá! Como posso ajudar você hoje?</div>
       </div>
-      <!-- Mensagens vão aqui -->
     </div>
-    
-    <!-- Área de envio -->
     <form class="chat-input-area">
       <button type="button" class="icon-btn" title="Enviar Áudio"><i data-lucide="mic"></i></button>
       <button type="button" class="icon-btn" title="Enviar Arquivo"><i data-lucide="paperclip"></i></button>
@@ -60,7 +67,6 @@
       <button type="submit" class="send-btn" title="Enviar"><i data-lucide="send"></i></button>
     </form>
   </div>
-
   <script>
     // Lucide icons
     lucide.createIcons();
@@ -70,13 +76,32 @@
     document.getElementById('openSidebar').onclick = () => sidebar.classList.add('active');
     document.getElementById('closeSidebar').onclick = () => sidebar.classList.remove('active');
 
-    // Login modal
+    // Modal Login/Register
     const loginModal = document.getElementById('loginModal');
     document.getElementById('openLogin').onclick = () => loginModal.classList.add('show');
     document.getElementById('closeLogin').onclick = () => loginModal.classList.remove('show');
     window.onclick = function(event) {
       if (event.target == loginModal) loginModal.classList.remove('show');
     }
+
+    // Switch between Login and Register
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const showLogin = document.getElementById('showLogin');
+    const showRegister = document.getElementById('showRegister');
+
+    showLogin.onclick = () => {
+      showLogin.classList.add('active');
+      showRegister.classList.remove('active');
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+    };
+    showRegister.onclick = () => {
+      showRegister.classList.add('active');
+      showLogin.classList.remove('active');
+      loginForm.classList.add('hidden');
+      registerForm.classList.remove('hidden');
+    };
   </script>
 </body>
 </html>
